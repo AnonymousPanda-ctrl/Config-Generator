@@ -4,76 +4,8 @@
 
 const CONFIG_TEMPLATES = {
     // Ubiquiti Radio Template (working)
-    'ubiquiti-radio': `radio.1.name=
-radio.1.shortname=
-radio.1.bus=pci
-radio.1.devdomain=5000
-radio.1.ccode=840
-radio.1.ccode_fixed=0
-radio.1.ccode_locked=0
-radio.1.subsystemid=0xe7fa
-radio.1.subvendorid=0x0777
-radio.1.txpower.max=25
-radio.1.txpower.min=-4
-radio.1.txpower.offset=2
-radio.1.ieee_modes=21
-radio.1.powerBackoff=6
-radio.1.antennas=1
-radio.1.def_antenna=1
-radio.1.antenna.1.id=1
-radio.1.antenna.1.name=NANO-G2
-radio.1.antenna.1.gain=13
-radio.1.antenna.1.builtin=1
-radio.1.antenna.1.chains=2
-radio.1.antenna.1.chain.1.id=0
-radio.1.antenna.1.chain.1.name=Vertical
-radio.1.antenna.1.chain.2.id=1
-radio.1.antenna.1.chain.2.name=Horizontal
-radio.1.caps=2900361236
-radio.1.caps2=2
-radio.1.eirp.limit=1
-radio.1.regdomain_flags=fcc_new_grant,ts=0x66647f6c
-radio.1.chains=2
-radio.1.ieee_mode_a=1
-radio.1.ptp_only=1
-radio.1.ptp_sta=1
-radio.1.ptmp_only=1
-radio.1.ptmp_sta=1
-radio.1.distance_limit=0
-radio.1.chanbw=10,20,30,40,50,60,80
-radio.2.name=
-radio.2.shortname=
-radio.2.bus=ahb
-radio.2.devdomain=5000
-radio.2.ccode=840
-radio.2.ccode_fixed=0
-radio.2.ccode_locked=0
-radio.2.subsystemid=0xe7fa
-radio.2.subvendorid=0x0777
-radio.2.txpower.max=19
-radio.2.txpower.min=0
-radio.2.txpower.offset=0
-radio.2.ieee_modes=10
-radio.2.powerBackoff=6
-radio.2.antennas=0
-radio.2.def_antenna=0
-radio.2.caps=12
-radio.2.caps2=0
-radio.2.eirp.limit=0
-radio.2.regdomain_flags=ts=0x66647f6c
-radio.2.chains=1
-radio.2.ieee_mode_bg=1
-radio.2.web_exclude=1
-radio.2.distance_limit=0
-radio.2.chanbw=5,10,20,40,80
-feature.rssi.leds=0
-feature.g2=1
-feature.g3=0
-feature.ext_reset=0
-feature.poe_passthrough=0
-7967e61c8a47c9394952437167477324
 aaa.status=disabled
-system.cfg.editor.webui=2025-03-18T08:43:41.653Z
+system.cfg.editor.webui=2026-09-03T08:11:45.607Z
 upnpd.status=disabled
 igmpproxy.upstream.devname=br0
 igmpproxy.status=disabled
@@ -96,8 +28,8 @@ ppp.1.mru=1492
 ppp.1.mtu=1492
 ppp.1.fallback_netmask=255.255.255.0
 ppp.1.fallback=192.168.10.1
-ppp.1.password=USER_PASSWORD
-ppp.1.name=USER_USERNAME
+ppp.1.password=null
+ppp.1.name=null
 ppp.1.devname=br0
 ppp.1.ipv6.status=enabled
 ppp.1.status=enabled
@@ -308,7 +240,7 @@ aaa.1.status=disabled
 aaa.1.radius.auth.1.port=1812
 aaa.1.radius.acct.1.status=disabled
 aaa.1.radius.acct.1.port=1813
-users.1.password=$1$min2MIGq$kgpNWVshoyhh/hbloxNEy1`,
+users.1.password=$1$min2MIGq$kgpNWVshoyhh/hbloxNEy1,
 
     // Ubiquiti Router Template (coming soon)
     'ubiquiti-router': `# Ubiquiti Router Config Template
