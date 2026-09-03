@@ -136,6 +136,15 @@
             border-radius: 4px;
             display: inline-block;
         }
+        .file-type-indicator {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+            display: inline-block;
+            padding: 2px 10px;
+            background: #e9ecef;
+            border-radius: 12px;
+        }
         @media (max-width: 480px) {
             .container { padding: 25px; }
             input, select { font-size: 16px; }
@@ -165,6 +174,7 @@
             <select id="deviceBrand" required disabled>
                 <option value="">— first select device type —</option>
             </select>
+            <div class="file-type-indicator" id="fileTypeIndicator">📄 File type: .cfg</div>
         </div>
 
         <div class="form-group">
@@ -194,6 +204,7 @@
         <strong>ℹ️ What happens:</strong><br>
         • Choose the correct fields and input as required<br>
         • Click/Press <strong>Generate &amp; Download</strong> to finish the creation process and to download the config file<br>
+        • <strong>Ubiquiti</strong> exports as <strong>.cfg</strong> | <strong>Cambium</strong> exports as <strong>.json</strong><br>
         • Future Updates will be communicated accordingly
     </div>
 
@@ -225,6 +236,30 @@
     const successMsg = document.getElementById('successMessage');
     const filenameDisplay = document.getElementById('filenameDisplay');
     const templateStatus = document.getElementById('templateStatus');
+    const fileTypeIndicator = document.getElementById('fileTypeIndicator');
+
+    // Get file extension based on brand
+    function getFileExtension(brand) {
+        if (brand === 'cambium') {
+            return '.json';
+        }
+        return '.cfg'; // Default for ubiquiti and others
+    }
+
+    // Update file type indicator
+    function updateFileTypeIndicator() {
+        const brand = deviceBrandEl.value;
+        if (brand) {
+            const ext = getFileExtension(brand);
+            const extDisplay = ext.toUpperCase();
+            const brandDisplay = brand.charAt(0).toUpperCase() + brand.slice(1);
+            fileTypeIndicator.textContent = `📄 ${brandDisplay} exports as: ${extDisplay}`;
+            fileTypeIndicator.style.color = brand === 'cambium' ? '#4caf50' : '#667eea';
+        } else {
+            fileTypeIndicator.textContent = '📄 File type: .cfg (default)';
+            fileTypeIndicator.style.color = '#888';
+        }
+    }
 
     // Check if templates loaded
     function checkTemplatesLoaded() {
@@ -284,6 +319,7 @@
         }
         
         deviceBrandEl.value = '';
+        updateFileTypeIndicator();
         applyGreyout();
         checkTemplatesLoaded();
     }
@@ -313,11 +349,10 @@
             statusMessage = 'Please select device brand';
             templateStatus.style.color = '#666';
         }
-        // Check if brand is cambium - NOW WORKING (no longer greyed out)
+        // Check if brand is cambium - NOW WORKING
         else if (brand === 'cambium') {
-            // Cambium is now working - check if template exists
             if (key && CONFIG_TEMPLATES[key]) {
-                statusMessage = `✅ Template: ${key}`;
+                statusMessage = `✅ Template: ${key} (${getFileExtension(brand)})`;
                 templateStatus.style.color = '#4caf50';
             } else {
                 disableAll = true;
@@ -345,7 +380,7 @@
         }
         // Check if template exists (Ubiquiti Radio & Cambium Radio work now)
         else if (key && CONFIG_TEMPLATES[key]) {
-            statusMessage = `✅ Template: ${key}`;
+            statusMessage = `✅ Template: ${key} (${getFileExtension(brand)})`;
             templateStatus.style.color = '#4caf50';
         }
         // Template not found
@@ -359,6 +394,9 @@
         if (statusMessage) {
             templateStatus.textContent = statusMessage;
         }
+
+        // Update file type indicator
+        updateFileTypeIndicator();
 
         const inputs = [usernameEl, passwordEl, deviceNameEl];
         inputs.forEach(inp => {
@@ -395,6 +433,7 @@
     });
 
     deviceBrandEl.addEventListener('change', function() {
+        updateFileTypeIndicator();
         applyGreyout();
         if (generateBtn.disabled) {
             successMsg.classList.remove('show');
@@ -446,26 +485,43 @@
             return;
         }
 
+        // Get the brand to determine file extension
+        const brand = deviceBrandEl.value;
+        const fileExt = getFileExtension(brand);
+
         let configContent = CONFIG_TEMPLATES[key]
             .replace(/USER_USERNAME/g, username)
             .replace(/USER_PASSWORD/g, password)
             .replace(/USER_DEVICENAME/g, deviceName);
 
+        // For Cambium JSON, we need to ensure it's valid JSON
+        // The template is already JSON, but we should validate it
+        if (brand === 'cambium') {
+            try {
+                // Parse and re-stringify to ensure valid JSON
+                const jsonObj = JSON.parse(configContent);
+                configContent = JSON.stringify(jsonObj, null, 2);
+            } catch (e) {
+                console.warn('Cambium template is not valid JSON, saving as-is');
+            }
+        }
+
         const blob = new Blob([configContent], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = deviceName + '.cfg';
+        a.download = deviceName + fileExt;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
 
-        filenameDisplay.textContent = deviceName + '.cfg';
+        filenameDisplay.textContent = deviceName + fileExt;
         successMsg.classList.add('show');
 
         window.lastConfig = {
             content: configContent,
-            filename: deviceName + '.cfg'
+            filename: deviceName + fileExt,
+            brand: brand
         };
     });
 
@@ -488,6 +544,7 @@
     updateBrandOptions();
     applyGreyout();
     checkTemplatesLoaded();
+    updateFileTypeIndicator();
 
     // If templates load after page load, update status
     if (typeof CONFIG_TEMPLATES !== 'undefined') {
