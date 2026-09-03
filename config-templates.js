@@ -3,7 +3,7 @@
 // ============================================
 
 const CONFIG_TEMPLATES = {
-    // Ubiquiti Radio Template
+    // Ubiquiti Radio Template (working)
     'ubiquiti-radio': `radio.1.name=
 radio.1.shortname=
 radio.1.bus=pci
@@ -310,24 +310,24 @@ aaa.1.radius.acct.1.status=disabled
 aaa.1.radius.acct.1.port=1813
 users.1.password=$1$min2MIGq$kgpNWVshoyhh/hbloxNEy1`,
 
-    // Ubiquiti Router Template (placeholder - you can fill this in)
+    // Ubiquiti Router Template (coming soon)
     'ubiquiti-router': `# Ubiquiti Router Config Template
-# Replace with actual router config
-ppp.1.password=USER_PASSWORD
-ppp.1.name=USER_USERNAME
-# Add more router-specific config here`,
-
-    // Cambium Radio Template (placeholder - coming soon)
-    'cambium-radio': `# Cambium Radio Config Template
-# Coming Soon!
+# Coming soon!
 ppp.1.password=USER_PASSWORD
 ppp.1.name=USER_USERNAME`,
 
-    // Cambium Router Template (placeholder - coming soon)
+    // Cambium Radio Template (coming soon)
+    'cambium-radio': `# Cambium Radio Config Template
+# Coming soon!
+ppp.1.password=USER_PASSWORD
+ppp.1.name=USER_USERNAME`,
+
+    // Cambium Router Template (coming soon)
     'cambium-router': `# Cambium Router Config Template
-# Coming Soon!
+# Coming soon!
 ppp.1.password=USER_PASSWORD
 ppp.1.name=USER_USERNAME`
 };
 
 console.log('✅ Config templates loaded:', Object.keys(CONFIG_TEMPLATES).length, 'templates available');
+console.log('📋 Available templates:', Object.keys(CONFIG_TEMPLATES).join(', '));
