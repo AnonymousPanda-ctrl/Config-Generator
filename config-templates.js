@@ -2,9 +2,31 @@
 //  CONFIG TEMPLATES - All templates in one place
 // ============================================
 
+// Define which brands are available for each device type
+const BRAND_MAPPING = {
+    'radio': ['ubiquiti', 'cambium'],
+    'router': ['reyee', 'cudy', 'mikrotik']
+};
+
+// Brand display names
+const BRAND_DISPLAY_NAMES = {
+    // Radio brands
+    'ubiquiti': 'Ubiquiti',
+    'cambium': 'Cambium [Coming Soon]',
+    
+    // Router brands
+    'reyee': 'Reyee [Coming Soon]',
+    'cudy': 'Cudy [Coming Soon]',
+    'mikrotik': 'MikroTik [Coming Soon]'
+};
+
 const CONFIG_TEMPLATES = {
+    // ============================================
+    // RADIO TEMPLATES
+    // ============================================
+    
     // Ubiquiti Radio Template (working)
-aaa.status=disabled
+    'ubiquiti-radio': `aaa.status=disabled
 system.cfg.editor.webui=2026-09-03T08:11:45.607Z
 upnpd.status=disabled
 igmpproxy.upstream.devname=br0
@@ -28,8 +50,8 @@ ppp.1.mru=1492
 ppp.1.mtu=1492
 ppp.1.fallback_netmask=255.255.255.0
 ppp.1.fallback=192.168.10.1
-ppp.1.password=null
-ppp.1.name=null
+ppp.1.password=USER_PASSWORD
+ppp.1.name=USER_USERNAME
 ppp.1.devname=br0
 ppp.1.ipv6.status=enabled
 ppp.1.status=enabled
@@ -240,13 +262,7 @@ aaa.1.status=disabled
 aaa.1.radius.auth.1.port=1812
 aaa.1.radius.acct.1.status=disabled
 aaa.1.radius.acct.1.port=1813
-users.1.password=$1$min2MIGq$kgpNWVshoyhh/hbloxNEy1,
-
-    // Ubiquiti Router Template (coming soon)
-    'ubiquiti-router': `# Ubiquiti Router Config Template
-# Coming soon!
-ppp.1.password=USER_PASSWORD
-ppp.1.name=USER_USERNAME`,
+users.1.password=$1$min2MIGq$kgpNWVshoyhh/hbloxNEy1`,
 
     // Cambium Radio Template (coming soon)
     'cambium-radio': `# Cambium Radio Config Template
@@ -254,8 +270,24 @@ ppp.1.name=USER_USERNAME`,
 ppp.1.password=USER_PASSWORD
 ppp.1.name=USER_USERNAME`,
 
-    // Cambium Router Template (coming soon)
-    'cambium-router': `# Cambium Router Config Template
+    // ============================================
+    // ROUTER TEMPLATES (all coming soon)
+    // ============================================
+    
+    // Reyee Router Template (coming soon)
+    'reyee-router': `# Reyee Router Config Template
+# Coming soon!
+ppp.1.password=USER_PASSWORD
+ppp.1.name=USER_USERNAME`,
+
+    // Cudy Router Template (coming soon)
+    'cudy-router': `# Cudy Router Config Template
+# Coming soon!
+ppp.1.password=USER_PASSWORD
+ppp.1.name=USER_USERNAME`,
+
+    // MikroTik Router Template (coming soon)
+    'mikrotik-router': `# MikroTik Router Config Template
 # Coming soon!
 ppp.1.password=USER_PASSWORD
 ppp.1.name=USER_USERNAME`
