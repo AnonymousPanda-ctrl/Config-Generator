@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loco Config Generator</title>
+    <title>Config Generator</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -139,7 +139,7 @@
 </head>
 <body>
 <div class="container">
-    <h1>⚙️ <span>Loco Config</span></h1>
+    <h1>⚙️ <span>Config Generator</span></h1>
 
     <form id="configForm">
         <!-- DROP DOWN 1: device type -->
@@ -203,6 +203,28 @@
 </div>
 
 <script>
+    // ============================================
+    //  CONFIG TEMPLATE (loaded from external file)
+    // ============================================
+    
+    let CONFIG_TEMPLATE = '';
+    
+    // Load the template when the page loads
+    fetch('config-template-UBNT.txt')
+        .then(response => response.text())
+        .then(data => {
+            CONFIG_TEMPLATE = data;
+            console.log('✅ Config template loaded successfully');
+        })
+        .catch(error => {
+            console.error('❌ Failed to load config template:', error);
+            alert('Unable to load configuration template. Please check your internet connection.');
+        });
+
+    // ============================================
+    //  APPLICATION LOGIC
+    // ============================================
+    
     (function() {
         // DOM refs
         const deviceTypeEl = document.getElementById('deviceType');
@@ -218,21 +240,10 @@
         // ----- helpers for brand dropdown -----
         function updateBrandOptions() {
             const type = deviceTypeEl.value;
-            // clear current options
             deviceBrandEl.innerHTML = '';
             deviceBrandEl.disabled = true;
 
-            if (type === 'radios') {
-                deviceBrandEl.disabled = false;
-                const opt1 = document.createElement('option');
-                opt1.value = 'ubiquiti';
-                opt1.textContent = 'Ubiquiti';
-                deviceBrandEl.appendChild(opt1);
-                const opt2 = document.createElement('option');
-                opt2.value = 'cambium';
-                opt2.textContent = 'Cambium [Coming Soon]';
-                deviceBrandEl.appendChild(opt2);
-            } else if (type === 'routers') {
+            if (type === 'radios' || type === 'routers') {
                 deviceBrandEl.disabled = false;
                 const opt1 = document.createElement('option');
                 opt1.value = 'ubiquiti';
@@ -243,16 +254,13 @@
                 opt2.textContent = 'Cambium [Coming Soon]';
                 deviceBrandEl.appendChild(opt2);
             } else {
-                // no type selected
                 const placeholder = document.createElement('option');
                 placeholder.value = '';
                 placeholder.textContent = '— first select device type —';
                 deviceBrandEl.appendChild(placeholder);
                 deviceBrandEl.disabled = true;
             }
-            // reset brand selection to first (or placeholder)
             deviceBrandEl.value = '';
-            // re-apply greyout logic
             applyGreyout();
         }
 
@@ -262,20 +270,13 @@
             const brand = deviceBrandEl.value;
             let disableAll = false;
 
-            // conditions: if type is Routers -> grey out everything (except dropdowns themselves?)
-            // but we want to keep dropdowns accessible, but all inputs + generate button disabled.
-            // Also if brand is Cambium (regardless of type) -> grey out everything.
-            if (type === 'routers') {
-                disableAll = true;
-            } else if (brand === 'cambium') {
+            if (type === 'routers' || brand === 'cambium') {
                 disableAll = true;
             }
 
-            // grey out username, password, deviceName, generate button
             const inputs = [usernameEl, passwordEl, deviceNameEl];
             inputs.forEach(inp => {
                 inp.disabled = disableAll;
-                // visual grey
                 if (disableAll) {
                     inp.classList.add('greyed');
                 } else {
@@ -292,10 +293,6 @@
                 generateBtn.style.cursor = 'pointer';
             }
 
-            // toggle password button still works but we don't grey it out (it's a button)
-            // but we can visually indicate if needed, but it's fine.
-
-            // if disabled, hide any success message and reset lastConfig? optional
             if (disableAll) {
                 successMsg.classList.remove('show');
                 window.lastConfig = null;
@@ -305,9 +302,7 @@
         // ----- event listeners for dropdowns -----
         deviceTypeEl.addEventListener('change', function() {
             updateBrandOptions();
-            // after updating, apply greyout based on current brand/type
             applyGreyout();
-            // if greyed, clear any success
             if (generateBtn.disabled) {
                 successMsg.classList.remove('show');
                 window.lastConfig = null;
@@ -334,343 +329,17 @@
             }
         });
 
-        // ----- config template (same as original) -----
-        const CONFIG_TEMPLATE = `### PART ###
-## 1670968975
-##WA.v8.7.11
-#board.sysid=0xe7fa
-#board.cpurevision=0x00001123
-#board.arch=0
-#board.fcc_id=SWX-NS5ACLW
-#board.name=NanoStation 5AC loco
-#board.shortname=N5L
-#board.model=Loco5AC
-#board.timestamp=1717862252
-#board.bom=13-00552-23
-#board.netmodes=3
-#board.hwaddr=9C05D692A06A
-#board.device_id=263ab7adef48947170c538dafe4f5cf1
-#board.reboot=40
-#board.upgrade=150
-#board.phycount=1
-#board.phy.1.maxmtu=2024
-#board.fcc_unii_activated=1
-#board.fcc_unii_switchable=0
-#board.required_fw_version=526084
-radio.1.name=
-radio.1.shortname=
-radio.1.bus=pci
-radio.1.devdomain=5000
-radio.1.ccode=840
-radio.1.ccode_fixed=0
-radio.1.ccode_locked=0
-radio.1.subsystemid=0xe7fa
-radio.1.subvendorid=0x0777
-radio.1.txpower.max=25
-radio.1.txpower.min=-4
-radio.1.txpower.offset=2
-radio.1.ieee_modes=21
-radio.1.powerBackoff=6
-radio.1.antennas=1
-radio.1.def_antenna=1
-radio.1.antenna.1.id=1
-radio.1.antenna.1.name=NANO-G2
-radio.1.antenna.1.gain=13
-radio.1.antenna.1.builtin=1
-radio.1.antenna.1.chains=2
-radio.1.antenna.1.chain.1.id=0
-radio.1.antenna.1.chain.1.name=Vertical
-radio.1.antenna.1.chain.2.id=1
-radio.1.antenna.1.chain.2.name=Horizontal
-radio.1.caps=2900361236
-radio.1.caps2=2
-radio.1.eirp.limit=1
-radio.1.regdomain_flags=fcc_new_grant,ts=0x66647f6c
-radio.1.chains=2
-radio.1.ieee_mode_a=1
-radio.1.ptp_only=1
-radio.1.ptp_sta=1
-radio.1.ptmp_only=1
-radio.1.ptmp_sta=1
-radio.1.distance_limit=0
-radio.1.chanbw=10,20,30,40,50,60,80
-radio.2.name=
-radio.2.shortname=
-radio.2.bus=ahb
-radio.2.devdomain=5000
-radio.2.ccode=840
-radio.2.ccode_fixed=0
-radio.2.ccode_locked=0
-radio.2.subsystemid=0xe7fa
-radio.2.subvendorid=0x0777
-radio.2.txpower.max=19
-radio.2.txpower.min=0
-radio.2.txpower.offset=0
-radio.2.ieee_modes=10
-radio.2.powerBackoff=6
-radio.2.antennas=0
-radio.2.def_antenna=0
-radio.2.caps=12
-radio.2.caps2=0
-radio.2.eirp.limit=0
-radio.2.regdomain_flags=ts=0x66647f6c
-radio.2.chains=1
-radio.2.ieee_mode_bg=1
-radio.2.web_exclude=1
-radio.2.distance_limit=0
-radio.2.chanbw=5,10,20,40,80
-feature.rssi.leds=0
-feature.g2=1
-feature.g3=0
-feature.ext_reset=0
-feature.poe_passthrough=0
-7967e61c8a47c9394952437167477324
-### PART ###
-aaa.status=disabled
-system.cfg.editor.webui=2025-03-18T08:43:41.653Z
-upnpd.status=disabled
-igmpproxy.upstream.devname=br0
-igmpproxy.status=disabled
-tshaper.status=disabled
-ip6tables.sys.fw6.status=disabled
-ip6tables.sys.status=enabled
-ip6tables.status=enabled
-dhcpd.1.dns.2.server=1.1.1.1
-dhcpd.1.dns.1.server=8.8.8.8
-dhcpd.1.lease_time=600
-dhcpd.1.netmask=255.255.255.0
-dhcpd.1.end=192.168.90.254
-dhcpd.1.start=192.168.90.2
-dhcpd.1.dnsproxy=disabled
-dhcpd.1.devname=br1
-dhcpd.1.status=enabled
-dhcpd.status=enabled
-ppp.1.require.mppe128=disabled
-ppp.1.mru=1492
-ppp.1.mtu=1492
-ppp.1.fallback_netmask=255.255.255.0
-ppp.1.fallback=192.168.10.1
-ppp.1.password=USER_PASSWORD
-ppp.1.name=USER_USERNAME
-ppp.1.devname=br0
-ppp.1.ipv6.status=enabled
-ppp.1.status=enabled
-ppp.status=enabled
-dhcp6d.1.stateful.status=enabled
-dhcp6d.1.dns.1.server=2620:fe::fe
-dhcp6d.1.dns.1.status=enabled
-dhcp6d.1.dnsproxy=disabled
-dhcp6d.1.devname=br1
-dhcp6d.1.status=enabled
-dhcp6d.status=enabled
-dhcp6c.1.stateless.status=disabled
-dhcp6c.1.stateful.pd.1.prefix.len=60
-dhcp6c.1.stateful.pd.1.devname=br1
-dhcp6c.1.stateful.pd.1.status=enabled
-dhcp6c.1.stateful.status=enabled
-dhcp6c.1.devname=ppp+
-dhcp6c.1.status=enabled
-dhcp6c.status=enabled
-iptables.sys.portfw.status=disabled
-iptables.sys.fw.status=disabled
-iptables.sys.tcpmss.status=enabled
-iptables.sys.masq.1.devname=ppp+
-iptables.sys.masq.1.status=enabled
-iptables.sys.masq.status=enabled
-iptables.sys.status=enabled
-iptables.status=enabled
-bridge.2.port.1.devname=eth0
-bridge.2.port.1.status=enabled
-bridge.2.devname=br1
-bridge.2.stp.status=disabled
-bridge.2.status=enabled
-bridge.1.port.1.devname=ath0
-bridge.1.port.1.status=enabled
-bridge.1.devname=br0
-bridge.1.stp.status=disabled
-bridge.1.status=enabled
-bridge.status=enabled
-netconf.4.netmask=255.255.255.0
-netconf.4.ip=192.168.90.1
-netconf.4.ip6.status=enabled
-netconf.4.role=lan
-netconf.4.mtu=1500
-netconf.4.autoip.status=disabled
-netconf.4.devname=br1
-netconf.4.status=enabled
-netconf.3.ip6.status=enabled
-netconf.3.role=wan
-netconf.3.mtu=1500
-netconf.3.autoip.status=disabled
-netconf.3.devname=br0
-netconf.3.status=enabled
-netconf.2.flowcontrol.tx.status=enabled
-netconf.2.flowcontrol.rx.status=enabled
-netconf.2.autoneg=enabled
-netconf.2.mtu=1500
-netconf.2.autoip.status=disabled
-netconf.2.up=enabled
-netconf.2.devname=eth0
-netconf.2.status=enabled
-netconf.1.mtu=1500
-netconf.1.autoip.status=disabled
-netconf.1.up=enabled
-netconf.1.devname=ath0
-netconf.1.status=enabled
-netconf.status=enabled
-resolv.nameserver.status=enabled
-resolv.host.1.status=enabled
-resolv.host.1.name=null
-sshd.port=22
-sshd.auth.passwd=enabled
-sshd.status=enabled
-pppoe-relay.status=disabled
-ebtables.sys.eap.1.devname=ath0
-ebtables.sys.eap.1.status=enabled
-ebtables.sys.eap.status=enabled
-ebtables.sys.status=enabled
-ebtables.status=enabled
-wpasupplicant.status=enabled
-wpasupplicant.profile.1.network.2.status=disabled
-wpasupplicant.profile.1.network.2.priority=2
-wpasupplicant.profile.1.network.2.key_mgmt.1.name=NONE
-wpasupplicant.profile.1.network.1.status=enabled
-wpasupplicant.profile.1.network.1.ssid=null
-wpasupplicant.profile.1.network.1.psk=null
-wpasupplicant.profile.1.network.1.proto.1.name=RSN
-wpasupplicant.profile.1.network.1.priority=100
-wpasupplicant.profile.1.network.1.pairwise.1.name=CCMP
-wpasupplicant.profile.1.network.1.key_mgmt.1.name=WPA-PSK
-wpasupplicant.profile.1.network.1.eap.1.status=disabled
-wpasupplicant.profile.1.name=AUTO
-wpasupplicant.device.1.status=enabled
-wpasupplicant.device.1.profile=AUTO
-wpasupplicant.device.1.devname=ath0
-wireless.1.wds.status=enabled
-wireless.1.status=enabled
-wireless.1.ssid=null
-wireless.1.signal_led_status=enabled
-wireless.1.signal_led4=65
-wireless.1.signal_led3=73
-wireless.1.signal_led2=80
-wireless.1.signal_led1=94
-wireless.1.security.type=none
-wireless.1.rate.mcs=-1
-wireless.1.rate.auto=enabled
-wireless.1.mcast.enhance=0
-wireless.1.mac_acl.status=disabled
-wireless.1.mac_acl.policy=allow
-wireless.1.l2_isolation=disabled
-wireless.1.hide_ssid=disabled
-wireless.1.devname=ath0
-wireless.1.amsdu=3
-wireless.1.ampdu.status=enabled
-wireless.1.ampdu.frames=32
-wireless.status=enabled
-users.2.uid=100
-users.2.status=disabled
-users.2.shell=/bin/false
-users.2.gid=100
-users.1.status=enabled
-users.1.name=ubnt
-users.status=enabled
-update.check.status=enabled
-unms.uri=wss://linkup.unmsapp.com:443+MEXzvj5HCWA0T13aptNheSx7lfBiIbHjUIyjqE5l_YcAAAAA+allowUntrustedCertificate
-unms.unms_redirector=enabled
-unms.status=enabled
-telnetd.status=disabled
-telnetd.port=23
-system.timezone.name=EET
-system.timezone=EET-2EEST,M3.5.0/3,M10.5.0/4
-system.poe_passthrough=disabled
-system.leds.nightmode=disabled
-system.external.reset=enabled
-system.date.timestamp=202503180000
-system.date.status=enabled
-system.cfg.version=65547
-system.autosend_crash_reports=disabled
-system.airosx.prov.status=disabled
-syslog.status=enabled
-syslog.remote.status=disabled
-syslog.remote.port=514
-snmp.status=enabled
-snmp.location=KentonOnSea
-snmp.contact=noc@linkup.co.za
-snmp.community=wifimon
-radio.1.txpower=25
-radio.1.status=enabled
-radio.1.scanbw.status=disabled
-radio.1.scan_list.status=disabled
-radio.1.rx_sensitivity=-96
-radio.1.reg_obey=disabled
-radio.1.rc_mode=0
-radio.1.ptpmode=0
-radio.1.pollingpri=2
-radio.1.pollingnoack=0
-radio.1.polling_ff_sta_rx_rssi_th=0
-radio.1.polling_ff_flex=0
-radio.1.polling_ff_dur=0
-radio.1.polling_ff_dl_ratio=50
-radio.1.polling=enabled
-radio.1.obey=enabled
-radio.1.mode=managed
-radio.1.low_txpower_mode=disabled
-radio.1.ieee_mode=auto
-radio.1.freq=5480
-radio.1.ff_cap_rep=0
-radio.1.dfs.status=enabled
-radio.1.devname=ath0
-radio.1.cwm.mode=1
-radio.1.cwm.enable=0
-radio.1.countrycode=710
-radio.1.cmsbias=0
-radio.1.chanbw=0
-radio.1.center.1.freq=5480
-radio.1.cable.loss=0
-radio.1.atpc.threshold=36
-radio.1.atpc.status=disabled
-radio.1.atpc.sta.status=enabled
-radio.1.antenna.id=1
-radio.1.antenna.gain=13
-radio.1.acktimeout=34
-radio.1.ackdistance=400
-radio.1.ack.auto=enabled
-radio.status=enabled
-radio.countrycode=710
-pwdog.status=disabled
-pwdog.retry=3
-pwdog.period=300
-pwdog.delay=300
-ntpclient.1.status=enabled
-ntpclient.1.server=time.google.com
-ntpclient.status=enabled
-netmode=router
-httpd.status=enabled
-httpd.session.timeout=900
-httpd.port=80
-httpd.https.status=enabled
-httpd.https.port=443
-gui.network.advanced.status=disabled
-gui.language=en_US
-discovery.status=enabled
-discovery.lldp.status=enabled
-discovery.cdp.status=disabled
-discovery.beacon.status=enabled
-airview.status=enabled
-aaa.1.wpa.psk=null
-aaa.1.status=disabled
-aaa.1.radius.auth.1.port=1812
-aaa.1.radius.acct.1.status=disabled
-aaa.1.radius.acct.1.port=1813
-users.1.password=$1$min2MIGq$kgpNWVshoyhh/hbloxNEy1`;
-
         // ----- form submission -----
         document.getElementById('configForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            // if generate is disabled, do nothing (but just in case)
             if (generateBtn.disabled) {
                 alert('Configuration is currently disabled for this selection. Please choose Ubiquiti (Radios) or wait for future updates.');
+                return;
+            }
+
+            if (!CONFIG_TEMPLATE) {
+                alert('Configuration template not loaded yet. Please wait a moment and try again.');
                 return;
             }
 
@@ -721,7 +390,7 @@ users.1.password=$1$min2MIGq$kgpNWVshoyhh/hbloxNEy1`;
             document.body.removeChild(a);
         };
 
-        // init: set brand dropdown properly
+        // init
         updateBrandOptions();
         applyGreyout();
     })();
