@@ -1,215 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Config Generator</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-        .container {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            max-width: 520px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-        }
-        h1 { text-align: center; margin-bottom: 25px; color: #1a1a2e; }
-        h1 span { color: #667eea; }
-        .form-group { margin-bottom: 18px; }
-        label { display: block; font-weight: 600; margin-bottom: 5px; color: #333; }
-        select, input {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            font-size: 16px;
-            background: #f8f9fa;
-            transition: 0.2s;
-        }
-        select:focus, input:focus {
-            outline: none;
-            border-color: #667eea;
-            background: white;
-        }
-        select[disabled], input[disabled] {
-            opacity: 0.6;
-            background: #e9ecef;
-            cursor: not-allowed;
-        }
-        .password-wrapper {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-        .password-wrapper input { flex: 1; padding-right: 50px; }
-        .toggle-password {
-            position: absolute;
-            right: 12px;
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            padding: 5px;
-        }
-        .generate-btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: 0.2s;
-        }
-        .generate-btn:hover:not(:disabled) { transform: scale(1.02); }
-        .generate-btn:disabled {
-            opacity: 0.5;
-            transform: none;
-            cursor: not-allowed;
-        }
-        .info {
-            background: #f0f4ff;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-top: 20px;
-            font-size: 13px;
-            color: #1a1a2e;
-            border-left: 4px solid #667eea;
-        }
-        .info strong { color: #0f3460; }
-        .success-message {
-            display: none;
-            background: #e8f5e9;
-            border: 2px solid #4caf50;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-            text-align: center;
-        }
-        .success-message.show { display: block; animation: fadeIn 0.4s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-        .success-message .filename {
-            background: #1e1e1e;
-            color: #d4d4d4;
-            padding: 8px 15px;
-            border-radius: 6px;
-            font-family: monospace;
-            display: inline-block;
-            margin-top: 8px;
-        }
-        .download-again-btn {
-            background: #4caf50;
-            color: white;
-            border: none;
-            padding: 10px 25px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 12px;
-        }
-        .sub-note {
-            font-size: 13px;
-            color: #555;
-            margin-top: 4px;
-            font-style: italic;
-        }
-        .template-status {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-            padding: 4px 8px;
-            background: #f8f9fa;
-            border-radius: 4px;
-            display: inline-block;
-        }
-        @media (max-width: 480px) {
-            .container { padding: 25px; }
-            input, select { font-size: 16px; }
-        }
-        .greyed {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-    </style>
-</head>
-<body>
-<div class="container">
-    <h1>⚙️ <span>Config Generator</span></h1>
-
-    <form id="configForm">
-        <div class="form-group">
-            <label>📡 Choose your device type</label>
-            <select id="deviceType" required>
-                <option value="">— select —</option>
-                <option value="radio">Radios</option>
-                <option value="router">Routers</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>🏷️ Choose your device brand</label>
-            <select id="deviceBrand" required disabled>
-                <option value="">— first select device type —</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>👤 Username</label>
-            <input type="text" id="username" placeholder="Enter PPP username" required>
-        </div>
-
-        <div class="form-group">
-            <label>🔒 Password</label>
-            <div class="password-wrapper">
-                <input type="password" id="password" placeholder="Enter PPP password" required>
-                <button type="button" class="toggle-password" id="togglePassword">👁️</button>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label>📱 Device Name</label>
-            <input type="text" id="deviceName" placeholder="e.g., N5L-Office" required>
-            <div class="sub-note">This will be the name of the installed device as well as the generated name of the config file.</div>
-        </div>
-
-        <button type="submit" class="generate-btn" id="generateBtn">⬇️ Generate & Download</button>
-        <div class="template-status" id="templateStatus">Loading templates...</div>
-    </form>
-
-    <div class="info">
-        <strong>ℹ️ What happens:</strong><br>
-        • Choose the correct fields and input as required<br>
-        • Click/Press <strong>Generate &amp; Download</strong> to finish the creation process and to download the config file<br>
-        • Future Updates will be communicated accordingly
-    </div>
-
-    <div class="success-message" id="successMessage">
-        <h3>✅ Config Downloaded!</h3>
-        <p>Your file has been generated.</p>
-        <div class="filename" id="filenameDisplay">N5L-Office.cfg</div>
-        <br>
-        <button class="download-again-btn" onclick="downloadAgain()">⬇️ Download Again</button>
-    </div>
-</div>
-
-<!-- Load templates from external file -->
-<script src="config-templates.js"></script>
-
-<script>
 // ============================================
 //  APPLICATION LOGIC
 // ============================================
@@ -243,7 +31,6 @@
         const type = deviceTypeEl.value;
         const brand = deviceBrandEl.value;
         if (!type || !brand) return null;
-        // Key format: "brand-type" (e.g., "ubiquiti-radio")
         return `${brand}-${type}`;
     }
 
@@ -252,23 +39,38 @@
         deviceBrandEl.innerHTML = '';
         deviceBrandEl.disabled = true;
 
-        if (type === 'radio' || type === 'router') {
+        // Check if BRAND_MAPPING exists
+        if (typeof BRAND_MAPPING !== 'undefined' && BRAND_MAPPING[type]) {
+            const brands = BRAND_MAPPING[type];
             deviceBrandEl.disabled = false;
-            const opt1 = document.createElement('option');
-            opt1.value = 'ubiquiti';
-            opt1.textContent = 'Ubiquiti';
-            deviceBrandEl.appendChild(opt1);
-            const opt2 = document.createElement('option');
-            opt2.value = 'cambium';
-            opt2.textContent = 'Cambium [Coming Soon]';
-            deviceBrandEl.appendChild(opt2);
+            
+            // Add default option
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = '— select brand —';
+            deviceBrandEl.appendChild(defaultOpt);
+            
+            // Add brand options based on device type
+            brands.forEach(brand => {
+                const opt = document.createElement('option');
+                opt.value = brand;
+                // Use display name if available
+                if (typeof BRAND_DISPLAY_NAMES !== 'undefined' && BRAND_DISPLAY_NAMES[brand]) {
+                    opt.textContent = BRAND_DISPLAY_NAMES[brand];
+                } else {
+                    opt.textContent = brand.charAt(0).toUpperCase() + brand.slice(1);
+                }
+                deviceBrandEl.appendChild(opt);
+            });
         } else {
+            // No brands available for this type
             const placeholder = document.createElement('option');
             placeholder.value = '';
-            placeholder.textContent = '— first select device type —';
+            placeholder.textContent = '— no brands available —';
             deviceBrandEl.appendChild(placeholder);
             deviceBrandEl.disabled = true;
         }
+        
         deviceBrandEl.value = '';
         applyGreyout();
         checkTemplatesLoaded();
@@ -286,29 +88,47 @@
             disableAll = true;
             statusMessage = '⏳ Templates loading...';
             templateStatus.style.color = '#ff9800';
-        } 
-        // Check if type is routers (grey out)
-        else if (type === 'router') {
-            disableAll = true;
-            statusMessage = '🚧 Routers coming soon';
-            templateStatus.style.color = '#ff9800';
         }
-        // Check if brand is cambium (grey out)
+        // Check if a type is selected
+        else if (!type) {
+            disableAll = true;
+            statusMessage = 'Please select device type';
+            templateStatus.style.color = '#666';
+        }
+        // Check if a brand is selected
+        else if (!brand) {
+            disableAll = true;
+            statusMessage = 'Please select device brand';
+            templateStatus.style.color = '#666';
+        }
+        // Check if brand is cambium (grey out - coming soon)
         else if (brand === 'cambium') {
             disableAll = true;
             statusMessage = '🚧 Cambium coming soon';
             templateStatus.style.color = '#ff9800';
         }
-        // Check if template exists
+        // Check if brand is reyee (grey out - coming soon)
+        else if (brand === 'reyee') {
+            disableAll = true;
+            statusMessage = '🚧 Reyee coming soon';
+            templateStatus.style.color = '#ff9800';
+        }
+        // Check if brand is cudy (grey out - coming soon)
+        else if (brand === 'cudy') {
+            disableAll = true;
+            statusMessage = '🚧 Cudy coming soon';
+            templateStatus.style.color = '#ff9800';
+        }
+        // Check if brand is mikrotik (grey out - coming soon)
+        else if (brand === 'mikrotik') {
+            disableAll = true;
+            statusMessage = '🚧 MikroTik coming soon';
+            templateStatus.style.color = '#ff9800';
+        }
+        // Check if template exists (only Ubiquiti Radio works right now)
         else if (key && CONFIG_TEMPLATES[key]) {
             statusMessage = `✅ Template: ${key}`;
             templateStatus.style.color = '#4caf50';
-        }
-        // No valid selection yet
-        else if (!type || !brand) {
-            disableAll = true;
-            statusMessage = 'Please select device type and brand';
-            templateStatus.style.color = '#666';
         }
         // Template not found
         else {
@@ -379,7 +199,7 @@
         e.preventDefault();
 
         if (generateBtn.disabled) {
-            alert('Configuration is currently disabled for this selection. Please choose Ubiquiti Radios or wait for future updates.');
+            alert('Configuration is currently disabled for this selection. Please choose Ubiquiti Radios (the only working option) or wait for future updates.');
             return;
         }
 
@@ -455,6 +275,3 @@
         setTimeout(applyGreyout, 100);
     }
 })();
-</script>
-</body>
-</html>
