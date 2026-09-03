@@ -127,6 +127,15 @@
             margin-top: 4px;
             font-style: italic;
         }
+        .template-status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            padding: 4px 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            display: inline-block;
+        }
         @media (max-width: 480px) {
             .container { padding: 25px; }
             input, select { font-size: 16px; }
@@ -142,7 +151,6 @@
     <h1>⚙️ <span>Config Generator</span></h1>
 
     <form id="configForm">
-        <!-- DROP DOWN 1: device type -->
         <div class="form-group">
             <label>📡 Choose your device type</label>
             <select id="deviceType" required>
@@ -152,7 +160,6 @@
             </select>
         </div>
 
-        <!-- DROP DOWN 2: device brand (dynamic) -->
         <div class="form-group">
             <label>🏷️ Choose your device brand</label>
             <select id="deviceBrand" required disabled>
@@ -160,13 +167,11 @@
             </select>
         </div>
 
-        <!-- USERNAME -->
         <div class="form-group">
             <label>👤 Username</label>
             <input type="text" id="username" placeholder="Enter PPP username" required>
         </div>
 
-        <!-- PASSWORD -->
         <div class="form-group">
             <label>🔒 Password</label>
             <div class="password-wrapper">
@@ -175,7 +180,6 @@
             </div>
         </div>
 
-        <!-- DEVICE NAME + subtext -->
         <div class="form-group">
             <label>📱 Device Name</label>
             <input type="text" id="deviceName" placeholder="e.g., N5L-Office" required>
@@ -183,9 +187,9 @@
         </div>
 
         <button type="submit" class="generate-btn" id="generateBtn">⬇️ Generate & Download</button>
+        <div class="template-status" id="templateStatus">Loading templates...</div>
     </form>
 
-    <!-- UPDATED INFO BOX -->
     <div class="info">
         <strong>ℹ️ What happens:</strong><br>
         • Choose the correct fields and input as required<br>
@@ -202,198 +206,215 @@
     </div>
 </div>
 
+<!-- Load templates from external file -->
+<script src="config-templates.js"></script>
+
 <script>
-    // ============================================
-    //  CONFIG TEMPLATE (loaded from external file)
-    // ============================================
-    
-    let CONFIG_TEMPLATE = '';
-    
-    // Load the template when the page loads
-    fetch('config-template-UBNT.txt')
-        .then(response => response.text())
-        .then(data => {
-            CONFIG_TEMPLATE = data;
-            console.log('✅ Config template loaded successfully');
-        })
-        .catch(error => {
-            console.error('❌ Failed to load config template:', error);
-            alert('Unable to load configuration template. Please check your internet connection.');
-        });
+// ============================================
+//  APPLICATION LOGIC
+// ============================================
 
-    // ============================================
-    //  APPLICATION LOGIC
-    // ============================================
-    
-    (function() {
-        // DOM refs
-        const deviceTypeEl = document.getElementById('deviceType');
-        const deviceBrandEl = document.getElementById('deviceBrand');
-        const usernameEl = document.getElementById('username');
-        const passwordEl = document.getElementById('password');
-        const deviceNameEl = document.getElementById('deviceName');
-        const generateBtn = document.getElementById('generateBtn');
-        const toggleBtn = document.getElementById('togglePassword');
-        const successMsg = document.getElementById('successMessage');
-        const filenameDisplay = document.getElementById('filenameDisplay');
+(function() {
+    const deviceTypeEl = document.getElementById('deviceType');
+    const deviceBrandEl = document.getElementById('deviceBrand');
+    const usernameEl = document.getElementById('username');
+    const passwordEl = document.getElementById('password');
+    const deviceNameEl = document.getElementById('deviceName');
+    const generateBtn = document.getElementById('generateBtn');
+    const toggleBtn = document.getElementById('togglePassword');
+    const successMsg = document.getElementById('successMessage');
+    const filenameDisplay = document.getElementById('filenameDisplay');
+    const templateStatus = document.getElementById('templateStatus');
 
-        // ----- helpers for brand dropdown -----
-        function updateBrandOptions() {
-            const type = deviceTypeEl.value;
-            deviceBrandEl.innerHTML = '';
+    // Check if templates loaded
+    function checkTemplatesLoaded() {
+        if (typeof CONFIG_TEMPLATES !== 'undefined' && Object.keys(CONFIG_TEMPLATES).length > 0) {
+            templateStatus.textContent = `✅ ${Object.keys(CONFIG_TEMPLATES).length} templates available`;
+            templateStatus.style.color = '#4caf50';
+            return true;
+        } else {
+            templateStatus.textContent = '❌ Templates failed to load - please refresh';
+            templateStatus.style.color = '#f44336';
+            return false;
+        }
+    }
+
+    function getTemplateKey() {
+        const type = deviceTypeEl.value;
+        const brand = deviceBrandEl.value;
+        if (!type || !brand) return null;
+        return `${brand}-${type}`;
+    }
+
+    function updateBrandOptions() {
+        const type = deviceTypeEl.value;
+        deviceBrandEl.innerHTML = '';
+        deviceBrandEl.disabled = true;
+
+        if (type === 'radios' || type === 'routers') {
+            deviceBrandEl.disabled = false;
+            const opt1 = document.createElement('option');
+            opt1.value = 'ubiquiti';
+            opt1.textContent = 'Ubiquiti';
+            deviceBrandEl.appendChild(opt1);
+            const opt2 = document.createElement('option');
+            opt2.value = 'cambium';
+            opt2.textContent = 'Cambium [Coming Soon]';
+            deviceBrandEl.appendChild(opt2);
+        } else {
+            const placeholder = document.createElement('option');
+            placeholder.value = '';
+            placeholder.textContent = '— first select device type —';
+            deviceBrandEl.appendChild(placeholder);
             deviceBrandEl.disabled = true;
-
-            if (type === 'radios' || type === 'routers') {
-                deviceBrandEl.disabled = false;
-                const opt1 = document.createElement('option');
-                opt1.value = 'ubiquiti';
-                opt1.textContent = 'Ubiquiti';
-                deviceBrandEl.appendChild(opt1);
-                const opt2 = document.createElement('option');
-                opt2.value = 'cambium';
-                opt2.textContent = 'Cambium [Coming Soon]';
-                deviceBrandEl.appendChild(opt2);
-            } else {
-                const placeholder = document.createElement('option');
-                placeholder.value = '';
-                placeholder.textContent = '— first select device type —';
-                deviceBrandEl.appendChild(placeholder);
-                deviceBrandEl.disabled = true;
-            }
-            deviceBrandEl.value = '';
-            applyGreyout();
         }
+        deviceBrandEl.value = '';
+        applyGreyout();
+        checkTemplatesLoaded();
+    }
 
-        // ----- grey out logic (Cambium & Routers) -----
-        function applyGreyout() {
-            const type = deviceTypeEl.value;
-            const brand = deviceBrandEl.value;
-            let disableAll = false;
+    function applyGreyout() {
+        const type = deviceTypeEl.value;
+        const brand = deviceBrandEl.value;
+        const key = getTemplateKey();
+        let disableAll = false;
 
-            if (type === 'routers' || brand === 'cambium') {
+        // Disable if:
+        // 1. Type is routers
+        // 2. Brand is cambium
+        // 3. No template exists for this combination
+        if (type === 'routers' || brand === 'cambium') {
+            disableAll = true;
+        } else if (key && typeof CONFIG_TEMPLATES !== 'undefined') {
+            // Check if template exists
+            if (!CONFIG_TEMPLATES[key]) {
                 disableAll = true;
-            }
-
-            const inputs = [usernameEl, passwordEl, deviceNameEl];
-            inputs.forEach(inp => {
-                inp.disabled = disableAll;
-                if (disableAll) {
-                    inp.classList.add('greyed');
-                } else {
-                    inp.classList.remove('greyed');
-                }
-            });
-
-            generateBtn.disabled = disableAll;
-            if (disableAll) {
-                generateBtn.style.opacity = '0.5';
-                generateBtn.style.cursor = 'not-allowed';
+                templateStatus.textContent = '⚠️ Template not available for this combination';
+                templateStatus.style.color = '#ff9800';
             } else {
-                generateBtn.style.opacity = '1';
-                generateBtn.style.cursor = 'pointer';
-            }
-
-            if (disableAll) {
-                successMsg.classList.remove('show');
-                window.lastConfig = null;
+                templateStatus.textContent = `✅ Template: ${key}`;
+                templateStatus.style.color = '#4caf50';
             }
         }
 
-        // ----- event listeners for dropdowns -----
-        deviceTypeEl.addEventListener('change', function() {
-            updateBrandOptions();
-            applyGreyout();
-            if (generateBtn.disabled) {
-                successMsg.classList.remove('show');
-                window.lastConfig = null;
-            }
-        });
-
-        deviceBrandEl.addEventListener('change', function() {
-            applyGreyout();
-            if (generateBtn.disabled) {
-                successMsg.classList.remove('show');
-                window.lastConfig = null;
-            }
-        });
-
-        // toggle password visibility
-        toggleBtn.addEventListener('click', function() {
-            const input = document.getElementById('password');
-            if (input.type === 'password') {
-                input.type = 'text';
-                this.textContent = '🙈';
+        const inputs = [usernameEl, passwordEl, deviceNameEl];
+        inputs.forEach(inp => {
+            inp.disabled = disableAll;
+            if (disableAll) {
+                inp.classList.add('greyed');
             } else {
-                input.type = 'password';
-                this.textContent = '👁️';
+                inp.classList.remove('greyed');
             }
         });
 
-        // ----- form submission -----
-        document.getElementById('configForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        generateBtn.disabled = disableAll;
+        if (disableAll) {
+            generateBtn.style.opacity = '0.5';
+            generateBtn.style.cursor = 'not-allowed';
+        } else {
+            generateBtn.style.opacity = '1';
+            generateBtn.style.cursor = 'pointer';
+        }
 
-            if (generateBtn.disabled) {
-                alert('Configuration is currently disabled for this selection. Please choose Ubiquiti (Radios) or wait for future updates.');
-                return;
-            }
+        if (disableAll) {
+            successMsg.classList.remove('show');
+            window.lastConfig = null;
+        }
+    }
 
-            if (!CONFIG_TEMPLATE) {
-                alert('Configuration template not loaded yet. Please wait a moment and try again.');
-                return;
-            }
-
-            const username = usernameEl.value.trim();
-            const password = passwordEl.value.trim();
-            const deviceName = deviceNameEl.value.trim();
-
-            if (!username || !password || !deviceName) {
-                alert('Please fill in all fields!');
-                return;
-            }
-
-            let configContent = CONFIG_TEMPLATE
-                .replace(/USER_USERNAME/g, username)
-                .replace(/USER_PASSWORD/g, password);
-
-            const blob = new Blob([configContent], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = deviceName + '.cfg';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-
-            filenameDisplay.textContent = deviceName + '.cfg';
-            successMsg.classList.add('show');
-
-            window.lastConfig = {
-                content: configContent,
-                filename: deviceName + '.cfg'
-            };
-        });
-
-        // download again
-        window.downloadAgain = function() {
-            if (!window.lastConfig) {
-                alert('Please generate a config first!');
-                return;
-            }
-            const blob = new Blob([window.lastConfig.content], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = window.lastConfig.filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        };
-
-        // init
+    deviceTypeEl.addEventListener('change', function() {
         updateBrandOptions();
         applyGreyout();
-    })();
+        if (generateBtn.disabled) {
+            successMsg.classList.remove('show');
+            window.lastConfig = null;
+        }
+    });
+
+    deviceBrandEl.addEventListener('change', function() {
+        applyGreyout();
+        if (generateBtn.disabled) {
+            successMsg.classList.remove('show');
+            window.lastConfig = null;
+        }
+    });
+
+    toggleBtn.addEventListener('click', function() {
+        const input = document.getElementById('password');
+        if (input.type === 'password') {
+            input.type = 'text';
+            this.textContent = '🙈';
+        } else {
+            input.type = 'password';
+            this.textContent = '👁️';
+        }
+    });
+
+    document.getElementById('configForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        if (generateBtn.disabled) {
+            alert('Configuration is currently disabled for this selection. Please choose a supported combination (Ubiquiti Radios) or wait for future updates.');
+            return;
+        }
+
+        const username = usernameEl.value.trim();
+        const password = passwordEl.value.trim();
+        const deviceName = deviceNameEl.value.trim();
+
+        if (!username || !password || !deviceName) {
+            alert('Please fill in all fields!');
+            return;
+        }
+
+        const key = getTemplateKey();
+        if (!key || !CONFIG_TEMPLATES[key]) {
+            alert('No template found for this selection!');
+            return;
+        }
+
+        let configContent = CONFIG_TEMPLATES[key]
+            .replace(/USER_USERNAME/g, username)
+            .replace(/USER_PASSWORD/g, password);
+
+        const blob = new Blob([configContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = deviceName + '.cfg';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        filenameDisplay.textContent = deviceName + '.cfg';
+        successMsg.classList.add('show');
+
+        window.lastConfig = {
+            content: configContent,
+            filename: deviceName + '.cfg'
+        };
+    });
+
+    window.downloadAgain = function() {
+        if (!window.lastConfig) {
+            alert('Please generate a config first!');
+            return;
+        }
+        const blob = new Blob([window.lastConfig.content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = window.lastConfig.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
+
+    // Initial setup
+    updateBrandOptions();
+    applyGreyout();
+    checkTemplatesLoaded();
+})();
 </script>
 </body>
 </html>
