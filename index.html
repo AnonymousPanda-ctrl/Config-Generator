@@ -155,8 +155,8 @@
             <label>📡 Choose your device type</label>
             <select id="deviceType" required>
                 <option value="">— select —</option>
-                <option value="radios">Radios</option>
-                <option value="routers">Routers</option>
+                <option value="radio">Radios</option>
+                <option value="router">Routers</option>
             </select>
         </div>
 
@@ -243,6 +243,7 @@
         const type = deviceTypeEl.value;
         const brand = deviceBrandEl.value;
         if (!type || !brand) return null;
+        // Key format: "brand-type" (e.g., "ubiquiti-radio")
         return `${brand}-${type}`;
     }
 
@@ -251,7 +252,7 @@
         deviceBrandEl.innerHTML = '';
         deviceBrandEl.disabled = true;
 
-        if (type === 'radios' || type === 'routers') {
+        if (type === 'radio' || type === 'router') {
             deviceBrandEl.disabled = false;
             const opt1 = document.createElement('option');
             opt1.value = 'ubiquiti';
@@ -278,23 +279,47 @@
         const brand = deviceBrandEl.value;
         const key = getTemplateKey();
         let disableAll = false;
+        let statusMessage = '';
 
-        // Disable if:
-        // 1. Type is routers
-        // 2. Brand is cambium
-        // 3. No template exists for this combination
-        if (type === 'routers' || brand === 'cambium') {
+        // First check if templates are loaded
+        if (typeof CONFIG_TEMPLATES === 'undefined') {
             disableAll = true;
-        } else if (key && typeof CONFIG_TEMPLATES !== 'undefined') {
-            // Check if template exists
-            if (!CONFIG_TEMPLATES[key]) {
-                disableAll = true;
-                templateStatus.textContent = '⚠️ Template not available for this combination';
-                templateStatus.style.color = '#ff9800';
-            } else {
-                templateStatus.textContent = `✅ Template: ${key}`;
-                templateStatus.style.color = '#4caf50';
-            }
+            statusMessage = '⏳ Templates loading...';
+            templateStatus.style.color = '#ff9800';
+        } 
+        // Check if type is routers (grey out)
+        else if (type === 'router') {
+            disableAll = true;
+            statusMessage = '🚧 Routers coming soon';
+            templateStatus.style.color = '#ff9800';
+        }
+        // Check if brand is cambium (grey out)
+        else if (brand === 'cambium') {
+            disableAll = true;
+            statusMessage = '🚧 Cambium coming soon';
+            templateStatus.style.color = '#ff9800';
+        }
+        // Check if template exists
+        else if (key && CONFIG_TEMPLATES[key]) {
+            statusMessage = `✅ Template: ${key}`;
+            templateStatus.style.color = '#4caf50';
+        }
+        // No valid selection yet
+        else if (!type || !brand) {
+            disableAll = true;
+            statusMessage = 'Please select device type and brand';
+            templateStatus.style.color = '#666';
+        }
+        // Template not found
+        else {
+            disableAll = true;
+            statusMessage = `❌ No template for: ${key}`;
+            templateStatus.style.color = '#f44336';
+        }
+
+        // Update status message
+        if (statusMessage) {
+            templateStatus.textContent = statusMessage;
         }
 
         const inputs = [usernameEl, passwordEl, deviceNameEl];
@@ -354,7 +379,12 @@
         e.preventDefault();
 
         if (generateBtn.disabled) {
-            alert('Configuration is currently disabled for this selection. Please choose a supported combination (Ubiquiti Radios) or wait for future updates.');
+            alert('Configuration is currently disabled for this selection. Please choose Ubiquiti Radios or wait for future updates.');
+            return;
+        }
+
+        if (typeof CONFIG_TEMPLATES === 'undefined') {
+            alert('Templates not loaded yet. Please refresh the page.');
             return;
         }
 
@@ -368,8 +398,13 @@
         }
 
         const key = getTemplateKey();
-        if (!key || !CONFIG_TEMPLATES[key]) {
-            alert('No template found for this selection!');
+        if (!key) {
+            alert('Please select both device type and brand!');
+            return;
+        }
+
+        if (!CONFIG_TEMPLATES[key]) {
+            alert(`No template found for: ${key}. Available templates: ${Object.keys(CONFIG_TEMPLATES).join(', ')}`);
             return;
         }
 
@@ -414,6 +449,11 @@
     updateBrandOptions();
     applyGreyout();
     checkTemplatesLoaded();
+
+    // If templates load after page load, update status
+    if (typeof CONFIG_TEMPLATES !== 'undefined') {
+        setTimeout(applyGreyout, 100);
+    }
 })();
 </script>
 </body>
