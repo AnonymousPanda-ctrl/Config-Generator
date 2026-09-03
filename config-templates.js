@@ -22,7 +22,7 @@ const BRAND_DISPLAY_NAMES = {
 
 const CONFIG_TEMPLATES = {
     // ============================================
-    // UBIQUITI RADIO TEMPLATE (working)
+    // UBIQUITI RADIO TEMPLATE
     // ============================================
     'ubiquiti-radio': `aaa.status=disabled
 system.cfg.editor.webui=2026-09-03T08:11:45.607Z
@@ -263,7 +263,7 @@ aaa.1.radius.acct.1.port=1813
 users.1.password=$1$min2MIGq$kgpNWVshoyhh/hbloxNEy1`,
 
     // ============================================
-    // CAMBIUM RADIO TEMPLATE (working)
+    // CAMBIUM RADIO TEMPLATE
     // ============================================
     'cambium-radio': `{
     "template_props": {
