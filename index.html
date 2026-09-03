@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,23 +19,33 @@
             background: white;
             padding: 40px;
             border-radius: 20px;
-            max-width: 500px;
+            max-width: 520px;
             width: 100%;
             box-shadow: 0 20px 60px rgba(0,0,0,0.5);
         }
-        h1 { text-align: center; margin-bottom: 30px; color: #1a1a2e; }
+        h1 { text-align: center; margin-bottom: 25px; color: #1a1a2e; }
         h1 span { color: #667eea; }
-        .form-group { margin-bottom: 20px; }
+        .form-group { margin-bottom: 18px; }
         label { display: block; font-weight: 600; margin-bottom: 5px; color: #333; }
-        input {
+        select, input {
             width: 100%;
             padding: 12px;
             border: 2px solid #ddd;
             border-radius: 10px;
             font-size: 16px;
             background: #f8f9fa;
+            transition: 0.2s;
         }
-        input:focus { outline: none; border-color: #667eea; background: white; }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+        }
+        select[disabled], input[disabled] {
+            opacity: 0.6;
+            background: #e9ecef;
+            cursor: not-allowed;
+        }
         .password-wrapper {
             position: relative;
             display: flex;
@@ -62,17 +72,24 @@
             font-weight: 600;
             cursor: pointer;
             margin-top: 10px;
-            transition: transform 0.2s;
+            transition: 0.2s;
         }
-        .generate-btn:hover { transform: scale(1.02); }
+        .generate-btn:hover:not(:disabled) { transform: scale(1.02); }
+        .generate-btn:disabled {
+            opacity: 0.5;
+            transform: none;
+            cursor: not-allowed;
+        }
         .info {
             background: #f0f4ff;
             padding: 12px 15px;
             border-radius: 8px;
             margin-top: 20px;
             font-size: 13px;
-            color: #555;
+            color: #1a1a2e;
+            border-left: 4px solid #667eea;
         }
+        .info strong { color: #0f3460; }
         .success-message {
             display: none;
             background: #e8f5e9;
@@ -82,8 +99,8 @@
             margin-top: 20px;
             text-align: center;
         }
-        .success-message.show { display: block; animation: fadeIn 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .success-message.show { display: block; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
         .success-message .filename {
             background: #1e1e1e;
             color: #d4d4d4;
@@ -104,57 +121,209 @@
             cursor: pointer;
             margin-top: 12px;
         }
+        .sub-note {
+            font-size: 13px;
+            color: #555;
+            margin-top: 4px;
+            font-style: italic;
+        }
         @media (max-width: 480px) {
             .container { padding: 25px; }
-            input { font-size: 16px; }
+            input, select { font-size: 16px; }
+        }
+        .greyed {
+            opacity: 0.6;
+            pointer-events: none;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>⚙️ <span>Loco Config</span></h1>
-        
-        <form id="configForm">
-            <div class="form-group">
-                <label>👤 Username</label>
-                <input type="text" id="username" placeholder="Enter PPP username" required>
-            </div>
-            
-            <div class="form-group">
-                <label>🔒 Password</label>
-                <div class="password-wrapper">
-                    <input type="password" id="password" placeholder="Enter PPP password" required>
-                    <button type="button" class="toggle-password" id="togglePassword">👁️</button>
-                </div>
-            </div>
-            
-            <div class="form-group">
-                <label>📱 Device Name</label>
-                <input type="text" id="deviceName" placeholder="e.g., N5L-Office" required>
-            </div>
-            
-            <button type="submit" class="generate-btn">⬇️ Generate & Download</button>
-        </form>
-        
-        <div class="info">
-            <strong>ℹ️ What happens:</strong><br>
-            • Replaces <strong>ppp.1.name</strong> with your username<br>
-            • Replaces <strong>ppp.1.password</strong> with your password<br>
-            • Downloads as <strong>[DeviceName].cfg</strong>
+<div class="container">
+    <h1>⚙️ <span>Loco Config</span></h1>
+
+    <form id="configForm">
+        <!-- DROP DOWN 1: device type -->
+        <div class="form-group">
+            <label>📡 Choose your device type</label>
+            <select id="deviceType" required>
+                <option value="">— select —</option>
+                <option value="radios">Radios</option>
+                <option value="routers">Routers</option>
+            </select>
         </div>
-        
-        <div class="success-message" id="successMessage">
-            <h3>✅ Config Downloaded!</h3>
-            <p>Your file has been generated.</p>
-            <div class="filename" id="filenameDisplay">N5L-Office.cfg</div>
-            <br>
-            <button class="download-again-btn" onclick="downloadAgain()">⬇️ Download Again</button>
+
+        <!-- DROP DOWN 2: device brand (dynamic) -->
+        <div class="form-group">
+            <label>🏷️ Choose your device brand</label>
+            <select id="deviceBrand" required disabled>
+                <option value="">— first select device type —</option>
+            </select>
         </div>
+
+        <!-- USERNAME -->
+        <div class="form-group">
+            <label>👤 Username</label>
+            <input type="text" id="username" placeholder="Enter PPP username" required>
+        </div>
+
+        <!-- PASSWORD -->
+        <div class="form-group">
+            <label>🔒 Password</label>
+            <div class="password-wrapper">
+                <input type="password" id="password" placeholder="Enter PPP password" required>
+                <button type="button" class="toggle-password" id="togglePassword">👁️</button>
+            </div>
+        </div>
+
+        <!-- DEVICE NAME + subtext -->
+        <div class="form-group">
+            <label>📱 Device Name</label>
+            <input type="text" id="deviceName" placeholder="e.g., N5L-Office" required>
+            <div class="sub-note">This will be the name of the installed device as well as the generated name of the config file.</div>
+        </div>
+
+        <button type="submit" class="generate-btn" id="generateBtn">⬇️ Generate & Download</button>
+    </form>
+
+    <!-- UPDATED INFO BOX -->
+    <div class="info">
+        <strong>ℹ️ What happens:</strong><br>
+        • Choose the correct fields and input as required<br>
+        • Click/Press <strong>Generate &amp; Download</strong> to finish the creation process and to download the config file<br>
+        • Future Updates will be communicated accordingly
     </div>
-    
-    <script>
-        // Toggle password visibility
-        document.getElementById('togglePassword').addEventListener('click', function() {
+
+    <div class="success-message" id="successMessage">
+        <h3>✅ Config Downloaded!</h3>
+        <p>Your file has been generated.</p>
+        <div class="filename" id="filenameDisplay">N5L-Office.cfg</div>
+        <br>
+        <button class="download-again-btn" onclick="downloadAgain()">⬇️ Download Again</button>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // DOM refs
+        const deviceTypeEl = document.getElementById('deviceType');
+        const deviceBrandEl = document.getElementById('deviceBrand');
+        const usernameEl = document.getElementById('username');
+        const passwordEl = document.getElementById('password');
+        const deviceNameEl = document.getElementById('deviceName');
+        const generateBtn = document.getElementById('generateBtn');
+        const toggleBtn = document.getElementById('togglePassword');
+        const successMsg = document.getElementById('successMessage');
+        const filenameDisplay = document.getElementById('filenameDisplay');
+
+        // ----- helpers for brand dropdown -----
+        function updateBrandOptions() {
+            const type = deviceTypeEl.value;
+            // clear current options
+            deviceBrandEl.innerHTML = '';
+            deviceBrandEl.disabled = true;
+
+            if (type === 'radios') {
+                deviceBrandEl.disabled = false;
+                const opt1 = document.createElement('option');
+                opt1.value = 'ubiquiti';
+                opt1.textContent = 'Ubiquiti';
+                deviceBrandEl.appendChild(opt1);
+                const opt2 = document.createElement('option');
+                opt2.value = 'cambium';
+                opt2.textContent = 'Cambium [Coming Soon]';
+                deviceBrandEl.appendChild(opt2);
+            } else if (type === 'routers') {
+                deviceBrandEl.disabled = false;
+                const opt1 = document.createElement('option');
+                opt1.value = 'ubiquiti';
+                opt1.textContent = 'Ubiquiti';
+                deviceBrandEl.appendChild(opt1);
+                const opt2 = document.createElement('option');
+                opt2.value = 'cambium';
+                opt2.textContent = 'Cambium [Coming Soon]';
+                deviceBrandEl.appendChild(opt2);
+            } else {
+                // no type selected
+                const placeholder = document.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = '— first select device type —';
+                deviceBrandEl.appendChild(placeholder);
+                deviceBrandEl.disabled = true;
+            }
+            // reset brand selection to first (or placeholder)
+            deviceBrandEl.value = '';
+            // re-apply greyout logic
+            applyGreyout();
+        }
+
+        // ----- grey out logic (Cambium & Routers) -----
+        function applyGreyout() {
+            const type = deviceTypeEl.value;
+            const brand = deviceBrandEl.value;
+            let disableAll = false;
+
+            // conditions: if type is Routers -> grey out everything (except dropdowns themselves?)
+            // but we want to keep dropdowns accessible, but all inputs + generate button disabled.
+            // Also if brand is Cambium (regardless of type) -> grey out everything.
+            if (type === 'routers') {
+                disableAll = true;
+            } else if (brand === 'cambium') {
+                disableAll = true;
+            }
+
+            // grey out username, password, deviceName, generate button
+            const inputs = [usernameEl, passwordEl, deviceNameEl];
+            inputs.forEach(inp => {
+                inp.disabled = disableAll;
+                // visual grey
+                if (disableAll) {
+                    inp.classList.add('greyed');
+                } else {
+                    inp.classList.remove('greyed');
+                }
+            });
+
+            generateBtn.disabled = disableAll;
+            if (disableAll) {
+                generateBtn.style.opacity = '0.5';
+                generateBtn.style.cursor = 'not-allowed';
+            } else {
+                generateBtn.style.opacity = '1';
+                generateBtn.style.cursor = 'pointer';
+            }
+
+            // toggle password button still works but we don't grey it out (it's a button)
+            // but we can visually indicate if needed, but it's fine.
+
+            // if disabled, hide any success message and reset lastConfig? optional
+            if (disableAll) {
+                successMsg.classList.remove('show');
+                window.lastConfig = null;
+            }
+        }
+
+        // ----- event listeners for dropdowns -----
+        deviceTypeEl.addEventListener('change', function() {
+            updateBrandOptions();
+            // after updating, apply greyout based on current brand/type
+            applyGreyout();
+            // if greyed, clear any success
+            if (generateBtn.disabled) {
+                successMsg.classList.remove('show');
+                window.lastConfig = null;
+            }
+        });
+
+        deviceBrandEl.addEventListener('change', function() {
+            applyGreyout();
+            if (generateBtn.disabled) {
+                successMsg.classList.remove('show');
+                window.lastConfig = null;
+            }
+        });
+
+        // toggle password visibility
+        toggleBtn.addEventListener('click', function() {
             const input = document.getElementById('password');
             if (input.type === 'password') {
                 input.type = 'text';
@@ -165,7 +334,7 @@
             }
         });
 
-        // Config template (shortened version - full version has all the config)
+        // ----- config template (same as original) -----
         const CONFIG_TEMPLATE = `### PART ###
 ## 1670968975
 ##WA.v8.7.11
@@ -495,25 +664,29 @@ aaa.1.radius.acct.1.status=disabled
 aaa.1.radius.acct.1.port=1813
 users.1.password=$1$min2MIGq$kgpNWVshoyhh/hbloxNEy1`;
 
-        // Form submission
+        // ----- form submission -----
         document.getElementById('configForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value.trim();
-            const deviceName = document.getElementById('deviceName').value.trim();
-            
+
+            // if generate is disabled, do nothing (but just in case)
+            if (generateBtn.disabled) {
+                alert('Configuration is currently disabled for this selection. Please choose Ubiquiti (Radios) or wait for future updates.');
+                return;
+            }
+
+            const username = usernameEl.value.trim();
+            const password = passwordEl.value.trim();
+            const deviceName = deviceNameEl.value.trim();
+
             if (!username || !password || !deviceName) {
                 alert('Please fill in all fields!');
                 return;
             }
-            
-            // Replace placeholders
+
             let configContent = CONFIG_TEMPLATE
                 .replace(/USER_USERNAME/g, username)
                 .replace(/USER_PASSWORD/g, password);
-            
-            // Download the file
+
             const blob = new Blob([configContent], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -522,20 +695,18 @@ users.1.password=$1$min2MIGq$kgpNWVshoyhh/hbloxNEy1`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            
-            // Show success
-            document.getElementById('filenameDisplay').textContent = deviceName + '.cfg';
-            document.getElementById('successMessage').classList.add('show');
-            
-            // Store for download again
+
+            filenameDisplay.textContent = deviceName + '.cfg';
+            successMsg.classList.add('show');
+
             window.lastConfig = {
                 content: configContent,
                 filename: deviceName + '.cfg'
             };
         });
 
-        // Download again function
-        function downloadAgain() {
+        // download again
+        window.downloadAgain = function() {
             if (!window.lastConfig) {
                 alert('Please generate a config first!');
                 return;
@@ -548,7 +719,12 @@ users.1.password=$1$min2MIGq$kgpNWVshoyhh/hbloxNEy1`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-        }
-    </script>
+        };
+
+        // init: set brand dropdown properly
+        updateBrandOptions();
+        applyGreyout();
+    })();
+</script>
 </body>
 </html>
